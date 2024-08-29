@@ -67,7 +67,7 @@ pub fn callback(_attr: TokenStream, item: TokenStream) -> TokenStream {
         },
         _ => quote! {
             //let res: Result<JSValue, JSValue> = todo!();
-            let res: Result<JSValue, JSValue> = #target_func_name(
+            let res: Result<rusty_jsc::JSValue, rusty_jsc::JSValue> = #target_func_name(
                 #context_var_name,
                 #function_var_name,
                 #this_var_name,
@@ -103,7 +103,7 @@ pub fn callback(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 let __args_refs_slice = unsafe { std::slice::from_raw_parts(__arguments, __argument_count as _) };
                 __args_refs_slice.iter().map(|r| (*r).into()).collect::<Vec<_>>()
             };
-            let #args_var_name: &[JSValue] = &#args_var_name;
+            let #args_var_name: &[rusty_jsc::JSValue] = &#args_var_name;
 
             #block_call
         }
@@ -148,20 +148,20 @@ pub fn constructor(_attr: TokenStream, item: TokenStream) -> TokenStream {
     if inputs_number == 3 {
         inputs_adaptation.push(quote! {
             let arguments = (0.._argument_count as isize)
-                .map(|arg_index| JSValue::from(_arguments.offset(arg_index).read()))
+                .map(|arg_index| rusty_jsc::JSValue::from(_arguments.offset(arg_index).read()))
                 .collect();
         });
         inputs_number -= 1;
     }
     if inputs_number == 2 {
         inputs_adaptation.push(quote! {
-            let constructor = JSObject::from(_constructor);
+            let constructor = rusty_jsc::JSObject::from(_constructor);
         });
         inputs_number -= 1;
     }
     if inputs_number == 1 {
         inputs_adaptation.push(quote! {
-            let context = JSContext::from(_ctx);
+            let context = rusty_jsc::JSContext::from(_ctx);
         });
     }
 
@@ -178,12 +178,12 @@ pub fn constructor(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #target_func
 
         unsafe extern "C" fn #name(
-            _ctx: JSContextRef,
-            _constructor: JSObjectRef,
+            _ctx: rusty_jsc::JSContextRef,
+            _constructor: rusty_jsc::JSObjectRef,
             _argument_count: size_t,
-            _arguments: *const JSValueRef,
-            _exception: *mut JSValueRef,
-        ) -> JSObjectRef {
+            _arguments: *const rusty_jsc::JSValueRef,
+            _exception: *mut rusty_jsc::JSValueRef,
+        ) -> rusty_jsc::JSObjectRef {
             #(#inputs_adaptation)*
             #function_call;
             _constructor
